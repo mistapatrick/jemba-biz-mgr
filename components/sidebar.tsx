@@ -1,0 +1,3 @@
+import Link from 'next/link';
+const links=[['/dashboard','Dashboard'],['/sales','Sales & documents'],['/products','Products & inventory'],['/customers','Customers'],['/expenses','Expenses'],['/admin/users','User administration']];
+export function Sidebar({role}:{role:string}){return <aside className="sidebar"><div className="brand">JEMBA<small>SUPPLY &amp; SOLUTIONS</small></div><div className="muted" style={{fontSize:11,textTransform:'uppercase',letterSpacing:1}}>Business workspace</div><nav className="nav">{links.map(([href,label])=><Link href={href} key={href}>{label}</Link>)}</nav><div style={{marginTop:'auto',fontSize:12,color:'#aaa'}}>Signed in as<br/><strong style={{color:'#f1c66d'}}>{role.replaceAll('_',' ')}</strong></div></aside>}
