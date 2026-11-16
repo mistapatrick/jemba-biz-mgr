@@ -102,3 +102,8 @@ The repository contains the implemented MVP screens and database operations for 
 ## Verification
 
 A GitHub Actions quality workflow runs `npm ci`, TypeScript checking and a Next.js production build on pushes and pull requests. A successful deployment is confirmed only when the GitHub Actions workflow and Vercel deployment both report success. This repository has not been connected to Jemba's actual GitHub, Vercel or Supabase accounts from this workspace, so no cloud deployment or live database test is claimed here.
+
+
+## Initial developer and owner provisioning
+
+The first cloud bootstrap creates separate `super_admin` and `owner_admin` identities. Apply migration `202611160001_bootstrap_developer_and_owner.sql`, configure the four Vercel environment variables, redeploy, and follow `docs/ACCOUNT_PROVISIONING.md`. Remove the one-time bootstrap secret after HTTP 201.

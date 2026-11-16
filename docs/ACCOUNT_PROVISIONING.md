@@ -1,22 +1,45 @@
-# Cloud account provisioning
+# Initial Jemba account provisioning (cloud)
 
-## Initial owner account
+The first bootstrap creates two separate identities in the same Jemba business workspace:
 
-The initial owner account is created through the one-time cloud endpoint `POST /api/bootstrap`. See the Cloud deployment section in the root README for the exact request body and steps. The endpoint requires the temporary `JEMBA_BOOTSTRAP_SECRET` and server-only `SUPABASE_SERVICE_ROLE_KEY` environment variables. It calls the atomic `bootstrap_initial_business` database function and refuses to create a second initial business.
+- Developer: `super_admin` (platform monitoring and technical support)
+- Jemima Bangoji: `owner_admin` (business operations)
 
-Immediately remove `JEMBA_BOOTSTRAP_SECRET` from Vercel and redeploy after the owner account is created.
+They must use different email addresses and separate passwords. Both passwords must be at least 14 characters.
 
-## Staff accounts
+## Required Vercel Production environment variables
 
-The owner signs into the deployed application and uses User administration to invite staff. Available staff roles are:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the project's publishable/anon key)
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only secret key; never expose to browser code)
+- `JEMBA_BOOTSTRAP_SECRET` (random one-time secret, at least 32 random bytes)
 
-- `customer_relationship_officer`
-- `cashier`
-- `storekeeper`
-- `supply_chain_manager`
+After adding/changing variables, redeploy the Vercel project.
 
-Supabase Auth SMTP must be configured and the Vercel production URL must be added to Supabase Auth Site URL and Redirect URLs. The staff invitation operation uses the server-side service-role key and must never be moved into browser code.
+## Run the one-time cloud request
 
-## Developer super administrator
+Send a POST request to `https://YOUR-VERCEL-DOMAIN/api/bootstrap` with:
 
-Do not create a developer super-admin by editing browser metadata or changing a profile row from the client. Provisioning a developer account should be a controlled server-side operation after the owner has approved the access. Keep developer technical access separate from routine owner financial access and audit any exceptional access.
+`Authorization: Bearer YOUR_ONE_TIME_SECRET`
+
+JSON body:
+
+```json
+{
+  "businessName": "Jemba Supply and Solutions Nigeria",
+  "developerName": "Patrick Anekwe",
+  "developerEmail": "YOUR_DEVELOPER_EMAIL",
+  "developerPassword": "YOUR_UNIQUE_PASSWORD_AT_LEAST_14_CHARACTERS",
+  "ownerName": "Jemima Bangoji",
+  "ownerEmail": "JEMIMA_EMAIL_ADDRESS",
+  "ownerPassword": "HER_UNIQUE_PASSWORD_AT_LEAST_14_CHARACTERS"
+}
+```
+
+Use different email addresses for developer and owner. Never paste passwords or secrets into GitHub, source files, chat, or public logs. The endpoint confirms both email addresses in Supabase Auth as part of this controlled initial provisioning operation.
+
+On HTTP 201, securely record the returned business ID, then immediately delete `JEMBA_BOOTSTRAP_SECRET` from Vercel and redeploy. Keep `SUPABASE_SERVICE_ROLE_KEY` in Vercel because other trusted server-side administration may need it. Do not delete or expose it.
+
+The SQL migration `202611160001_bootstrap_developer_and_owner.sql` must be applied before calling the endpoint. The database function is service-role-only and refuses to create a second initial workspace.
+
+If provisioning fails, inspect the JSON error response and Vercel function logs. The endpoint attempts to delete any Auth users it created when the database transaction fails.
